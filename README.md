@@ -20,6 +20,11 @@ Two sub-modules:
   - Used for setting up the EEG controller.
   - Connects to the controller on initial setup.
   - Sends necessary network information for connecting EEG controller to home network.
+  - Run in debug mode:
+    1. Set up environment by following [this guide](https://docs.flutter.dev/get-started/install).
+    2. Start either Android or iOS emulator.
+    3. Run `cd eeg/connection_app`.
+    4. Run `flutter run`.
 
 ### Server (`/server/`)
 - Exists somewhere outside home network.
