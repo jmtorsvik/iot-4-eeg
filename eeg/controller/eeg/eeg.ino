@@ -44,6 +44,12 @@ void loop() {
 		//SENSOR_VALUE = ;
 		SIGNAL = filter(analogRead(INPUT_PIN));
     //Serial.print("eeg: ");
-		Serial.println(SIGNAL);
+		sendToPC(&SIGNAL);
 	}
+}
+
+void sendToPC(float* data)
+{
+  byte* byteData = (byte*)(data);    // Casting to a byte pointer
+  Serial.write(byteData, 4);         // Send through Serial to the PC
 }
