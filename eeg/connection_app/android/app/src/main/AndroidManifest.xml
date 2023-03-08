@@ -30,5 +30,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- For Flutter Blue Plus to work (https://pub.dev/packages/flutter_blue): -->
+        <uses-permission android:name="android.permission.BLUETOOTH" />  
+        <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />  
+        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     </application>
 </manifest>

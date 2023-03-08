@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'widgets/connect_button.dart';
+
 void main() {
   runApp(const ConnectionApp());
 }
@@ -15,10 +17,7 @@ class ConnectionApp extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(title: const Text('Connect your EEG unit!')),
         body: Center(
-          child: ElevatedButton(
-            onPressed: () => print('Connect!'),
-            child: const Text('Connect!'),
-          ),
+          child: ConnectButton(),
         ),
       ),
     );
