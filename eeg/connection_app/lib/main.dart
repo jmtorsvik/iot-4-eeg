@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'widgets/connect_button.dart';
+import 'home_screen.dart';
 
 void main() {
   runApp(const ConnectionApp());
@@ -14,12 +14,7 @@ class ConnectionApp extends StatelessWidget {
     return MaterialApp(
       title: 'Connection App',
       theme: ThemeData(primarySwatch: Colors.green),
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Connect your EEG unit!')),
-        body: Center(
-          child: ConnectButton(),
-        ),
-      ),
+      home: const HomeScreen(),
     );
   }
 }
