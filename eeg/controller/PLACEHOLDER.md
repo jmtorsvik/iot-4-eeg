@@ -1,1 +1,0 @@
-Write your controller code in `/eeg/controller/`!
