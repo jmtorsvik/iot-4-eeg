@@ -18,7 +18,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Starting BLE work!");
 
-  BLEDevice::init("EEG-CONTROLLER-1");
+  BLEDevice::init("EEG_CONTROLLER_1");
   BLEServer *pServer = BLEDevice::createServer();
   BLEService *pService = pServer->createService(SERVICE_UUID);
   BLECharacteristic *pCharacteristic = pService->createCharacteristic(
