@@ -29,8 +29,8 @@ void setup() {
                                          BLECharacteristic::PROPERTY_WRITE
                                        );
 
-  usernameCharacteristic->setValue("Placeholder_Username");
-  passwordCharacteristic->setValue("Placeholder_Password");
+  usernameCharacteristic->setValue("");
+  passwordCharacteristic->setValue("");
   pService->start();
   // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
   BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
@@ -51,7 +51,7 @@ void loop() {
   
   String username = usernameChar->getValue().c_str();
   String password = passwordChar->getValue().c_str();
-  
+
   Serial.print("Username: ");
   Serial.println(username);
   

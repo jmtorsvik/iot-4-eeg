@@ -13,7 +13,7 @@ class DeviceList extends StatelessWidget {
       children: devices
           .map(
             (device) => TextButton(
-              onPressed: () => onPressed(device.name),
+              onPressed: () => onPressed(device),
               child: Text(
                 device.name,
                 style: const TextStyle(fontSize: 20),

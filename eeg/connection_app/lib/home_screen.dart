@@ -1,5 +1,7 @@
+import 'package:connection_app/home_screen_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'dart:convert';
 
 import 'device_list.dart';
 
@@ -13,61 +15,96 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final String usernameUUID = "85c70960-789f-405d-aca8-d84167bd0fd9";
+  final String passwordUUID = "1e924c7d-f95f-4468-afc8-67372dc559fc";
   final FlutterBluePlus _flutterBlue = FlutterBluePlus.instance;
+
   Set<BluetoothDevice> _scannedDevices = {};
+  BluetoothService? _deviceService;
   bool _isScanning = false;
+
+  EdgeInsetsGeometry padding() {
+    return EdgeInsets.fromLTRB(
+        0,
+        200 - MediaQuery.of(context).viewInsets.bottom,
+        0,
+        200 - MediaQuery.of(context).viewInsets.bottom);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Connect to your EEG unit')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _isScanning
-                ? const Text(
-                    "Scanning...",
-                    style: TextStyle(fontSize: 26),
-                  )
-                : _scannedDevices.isEmpty
+        child: AnimatedPadding(
+          padding: EdgeInsets.fromLTRB(
+              0,
+              200 - MediaQuery.of(context).viewInsets.bottom / 2,
+              0,
+              200 - MediaQuery.of(context).viewInsets.bottom / 2),
+          duration: const Duration(milliseconds: 0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: 250,
+                height: 200,
+                child: _isScanning
                     ? const Text(
-                        "No devices found.",
+                        "Scanning...",
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 26),
                       )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Found the following devices:",
+                    : _scannedDevices.isEmpty
+                        ? const Text(
+                            "No devices found.",
+                            textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 26),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: _deviceService != null
+                                ? const [
+                                    Text(
+                                      "Connect to EDUROAM:",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 26),
+                                    ),
+                                    // TODO: Send input from user using sendCredentials method
+                                    TextField(
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        labelText: 'Username',
+                                      ),
+                                    ),
+                                    TextField(
+                                      obscureText: true,
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        labelText: 'Password',
+                                      ),
+                                    ),
+                                  ]
+                                : [
+                                    const Text(
+                                      "Found the following devices:",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 26),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    DeviceList(
+                                      _scannedDevices,
+                                      connectToDevice,
+                                    ),
+                                  ],
                           ),
-                          const SizedBox(height: 16),
-                          DeviceList(
-                            _scannedDevices,
-                            // TODO: Add function for connecting to EEG Controller
-                            (name) => print("Connect to $name"),
-                          ),
-                        ],
-                      ),
-            ElevatedButton(
-              onPressed: scanPeripherals,
-              style: ButtonStyle(
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
               ),
-              child: const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  'Scan!',
-                  style: TextStyle(fontSize: 32),
-                ),
-              ),
-            ),
-          ],
+              _deviceService != null
+                  ? HomeScreenButton(
+                      'Send!', () => sendCredentials("Jakob", "MittPassord"))
+                  : HomeScreenButton('Scan!', scanPeripherals),
+            ],
+          ),
         ),
       ),
     );
@@ -97,5 +134,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     setState(() => _scannedDevices = devices);
+  }
+
+  void connectToDevice(BluetoothDevice device) async {
+    print("Connecting to " + device.name + "...");
+    await device.connect();
+    print("Connected to " + device.name + "!");
+
+    BluetoothService service = (await device.discoverServices())[0];
+    setState(() => _deviceService = service);
+  }
+
+  void sendCredentials(String username, String password) async {
+    for (BluetoothCharacteristic c in _deviceService!.characteristics) {
+      if (c.uuid.toString() == usernameUUID) {
+        await c.write(utf8.encode(username));
+      } else if (c.uuid.toString() == passwordUUID) {
+        await c.write(utf8.encode(password));
+      }
+    }
   }
 }
