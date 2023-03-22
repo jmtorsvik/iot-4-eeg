@@ -1,1 +1,0 @@
-Write your connection app code in `/eeg/connection_app/`!
