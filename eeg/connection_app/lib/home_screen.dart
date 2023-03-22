@@ -17,10 +17,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final String usernameUUID = "85c70960-789f-405d-aca8-d84167bd0fd9";
   final String passwordUUID = "1e924c7d-f95f-4468-afc8-67372dc559fc";
+
   final FlutterBluePlus _flutterBlue = FlutterBluePlus.instance;
 
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+
   Set<BluetoothDevice> _scannedDevices = {};
-  BluetoothService? _deviceService;
+  BluetoothDevice? _device;
   bool _isScanning = false;
 
   EdgeInsetsGeometry padding() {
@@ -63,23 +67,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           )
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: _deviceService != null
-                                ? const [
-                                    Text(
+                            children: _device != null
+                                ? [
+                                    const Text(
                                       "Connect to EDUROAM:",
                                       textAlign: TextAlign.center,
                                       style: TextStyle(fontSize: 26),
                                     ),
                                     // TODO: Send input from user using sendCredentials method
                                     TextField(
-                                      decoration: InputDecoration(
+                                      controller: usernameController,
+                                      decoration: const InputDecoration(
                                         border: OutlineInputBorder(),
                                         labelText: 'Username',
                                       ),
                                     ),
                                     TextField(
                                       obscureText: true,
-                                      decoration: InputDecoration(
+                                      controller: passwordController,
+                                      decoration: const InputDecoration(
                                         border: OutlineInputBorder(),
                                         labelText: 'Password',
                                       ),
@@ -99,9 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                           ),
               ),
-              _deviceService != null
-                  ? HomeScreenButton(
-                      'Send!', () => sendCredentials("Jakob", "MittPassord"))
+              _device != null
+                  ? HomeScreenButton('Send!', sendCredentials)
                   : HomeScreenButton('Scan!', scanPeripherals),
             ],
           ),
@@ -141,17 +146,26 @@ class _HomeScreenState extends State<HomeScreen> {
     await device.connect();
     print("Connected to " + device.name + "!");
 
-    BluetoothService service = (await device.discoverServices())[0];
-    setState(() => _deviceService = service);
+    setState(() => _device = device);
   }
 
-  void sendCredentials(String username, String password) async {
-    for (BluetoothCharacteristic c in _deviceService!.characteristics) {
+  void sendCredentials() async {
+    BluetoothService service = (await _device!.discoverServices())[0];
+
+    for (BluetoothCharacteristic c in service.characteristics) {
       if (c.uuid.toString() == usernameUUID) {
-        await c.write(utf8.encode(username));
+        await c.write(utf8.encode(usernameController.text));
       } else if (c.uuid.toString() == passwordUUID) {
-        await c.write(utf8.encode(password));
+        await c.write(utf8.encode(passwordController.text));
       }
     }
+
+    _device!.disconnect();
+    setState(() {
+      _device = null;
+    });
+
+    usernameController.dispose();
+    passwordController.dispose();
   }
 }
