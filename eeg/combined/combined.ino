@@ -12,8 +12,6 @@
 #define SAMPLE_RATE 256
 #define BAUD_RATE 115200
 #define INPUT_PIN 34
-#define EAP_IDENTITY "jakobmt@ntnu.no" //if connecting from another corporation, use identity@organisation.domain in Eduroam 
-
 
 const char* ssid = "eduroam"; // Eduroam SSID
 const char* host = "arduino.php5.sk"; //external server domain for HTTP connection after authentification
@@ -33,7 +31,7 @@ void setup() {
 
   Serial.println("Starting BLE work!");
   
-  BLEDevice::init("EEG_CONTROLLER_1");
+  BLEDevice::init("EEG_CONTROLLER_2");
   BLEServer* pServer = BLEDevice::createServer();
   BLEService* pService = pServer->createService(SERVICE_UUID);
   BLECharacteristic* usernameCharacteristic = pService->createCharacteristic(
@@ -60,14 +58,19 @@ void setup() {
   Serial.println("Characteristic defined! Now you can read it in your phone!");
 
 
-  std::string test = usernameCharacteristic->getValue();
-  while(test == ""){
-    test = usernameCharacteristic->getValue();
+  std::string usernameTest = usernameCharacteristic->getValue();
+  std::string passwordTest = usernameCharacteristic->getValue();
+
+  while(usernameTest == "" || passwordTest == ""){
+    usernameTest = usernameCharacteristic->getValue();
+    passwordTest = passwordCharacteristic->getValue();
     delay(500);
   }
 
-  const char* username = usernameCharacteristic->getValue().c_str();
-  const char* password = passwordCharacteristic->getValue().c_str();
+  const std::string eapID = usernameCharacteristic->getValue().c_str();
+  const std::string password = passwordCharacteristic->getValue().c_str();
+
+  BLEDevice::deinit(true);
 
   Serial.println();
   Serial.print("Connecting to network: ");
@@ -76,9 +79,10 @@ void setup() {
   WiFi.mode(WIFI_STA); //init wifi mode
 
   // Example1 (most common): a cert-file-free eduroam with PEAP (or TTLS)
-  WiFi.begin(ssid, WPA2_AUTH_PEAP, EAP_IDENTITY, username, password);
+  const int l = eapID.length();
+  const std::string username = eapID.substr(0, l - 8);
 
-  
+  WiFi.begin(ssid, WPA2_AUTH_PEAP, eapID.c_str(), username.c_str(), password.c_str());
   
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
