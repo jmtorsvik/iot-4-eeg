@@ -4,6 +4,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'dart:convert';
 
 import 'device_list.dart';
+import 'home_screen_text.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -54,27 +55,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 250,
                 height: 200,
                 child: _isScanning
-                    ? const Text(
-                        "Scanning...",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 26),
-                      )
+                    ? const HomeScreenText("Scanning...")
                     : _scannedDevices.isEmpty
-                        ? const Text(
-                            "No devices found.",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 26),
-                          )
+                        ? const HomeScreenText("No devices found.")
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: _device != null
                                 ? [
-                                    const Text(
-                                      "Connect to EDUROAM:",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 26),
-                                    ),
-                                    // TODO: Send input from user using sendCredentials method
+                                    const HomeScreenText("Connect to EDUROAM:"),
                                     TextField(
                                       controller: usernameController,
                                       decoration: const InputDecoration(
@@ -92,11 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ]
                                 : [
-                                    const Text(
-                                      "Found the following devices:",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 26),
-                                    ),
+                                    const HomeScreenText(
+                                        "Found the following devices:"),
                                     const SizedBox(height: 16),
                                     DeviceList(
                                       _scannedDevices,
@@ -125,26 +110,18 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
-    print("Starting scan");
     setState(() => _isScanning = true);
 
     await _flutterBlue.startScan(timeout: const Duration(seconds: 3));
 
-    print("Stopping scan");
     _flutterBlue.stopScan();
     setState(() => _isScanning = false);
-
-    for (BluetoothDevice device in devices) {
-      print("Found device: $device");
-    }
 
     setState(() => _scannedDevices = devices);
   }
 
   void connectToDevice(BluetoothDevice device) async {
-    print("Connecting to " + device.name + "...");
     await device.connect();
-    print("Connected to " + device.name + "!");
 
     setState(() => _device = device);
   }
