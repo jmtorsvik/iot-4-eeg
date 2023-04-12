@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv('Data1.csv')
+df = pd.read_csv('server/Data1.csv')
 df.head()
 
 df = df.drop(['Unnamed: 0', 'trial number','sensor position', 'subject identifier', 'matching condition', 'channel'], axis=1)
