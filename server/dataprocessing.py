@@ -44,13 +44,6 @@ N = len(x)                        # Define the total number of data points
 T = N * dt                            # Define the total duration of the data
 time_axis = np.arange(0,T,dt)
 
-# Plot filtered time series data
-fig = plt.plot(time_axis, EEG)
-plt.xlabel('Time [Sec]')
-plt.ylabel('$\mu V$')
-plt.title("Filtered EEG data")
-plt.show()
-
 ### DATA ANALYSIS
 
 # Compute Fourier transform and PSD
@@ -59,7 +52,7 @@ Sxx = 2 * dt ** 2 / T * (xf * xf.conj())  # Compute spectrum
 Sxx = Sxx[:int(len(x) / 2)]           # Ignore negative frequencies
 
 # Compute and plot PSD with mne function
-raw_filt.plot_psd(fmax=100)
+#raw_filt.plot_psd(fmax=100)
 
 # Setup variables for plotting
 df = 1 / T                      # Determine frequency resolution
@@ -95,6 +88,15 @@ relative_powers = [powers[0]/sum_powers, powers[1]/sum_powers, powers[2]/sum_pow
 
 ### PLOTTING
 
+# Plot filtered time series data
+plt.plot(time_axis, EEG)
+plt.xlabel('Time [Sec]')
+plt.ylabel('$\mu V$')
+plt.title("Filtered EEG timeseries data")
+
+plt.savefig("timeseries.pdf")
+
+# Plot Power and Spectrum
 fig, axis = plt.subplots(2)
        
 xlabel = ["delta","theta","alpha","beta"]
