@@ -1,58 +1,81 @@
 import numpy as np
 import pandas as pd
-
-df = pd.read_csv('Data1.csv')
-df.head()
-
-df = df.drop(['Unnamed: 0', 'trial number','sensor position', 'subject identifier', 'matching condition', 'channel'], axis=1)
-df = df.rename(columns={'sample num':'sessionID', 'name':'UID'})
-
-# Analysing EEG with FFT from scipy
+import mne
 from numpy.fft import fft
 import matplotlib.pyplot as plt
 from matplotlib import rc
 rc('text', usetex=True)
 
-# Data
+### DATA PREPROCESSING
+
+# Data collection
+df = pd.read_csv("server/e_bolger")
+
 t = df["time"]
-sample_rate = len(t)
-EEG = df["sensor value"]
-n = len(EEG)
+sample_rate = 230 #Hz
+EEG = (3.3/4096)*df["sensorValue"] # Deler 3.3v på 4096 og ganger med data for å få spenning
+EEG_mean = np.mean(EEG)
+EEG = EEG - EEG_mean # Zero center data
 
-x = EEG                               # Relabel the data variable
-dt = t[1] - t[0]                      # Define the sampling interval
-N = x.shape[0]                        # Define the total number of data points
+# Transforming data in a way that MNE can interpret and do filtering
+EEG = EEG.to_frame()
+data = EEG.to_numpy().T
+
+ch_names = EEG.columns.tolist()
+ch_types = ['eeg'] * len(ch_names)
+sfreq = sample_rate  # replace with your sampling frequency
+info = mne.create_info(ch_names=ch_names, ch_types=ch_types, sfreq=sfreq)
+
+# Create Raw object to be filtered
+raw = mne.io.RawArray(data, info)
+
+# Filter settings for band pass
+low_cut = 0.1
+high_cut = 40
+
+# Filtering
+raw_filt = raw.copy().filter(low_cut, high_cut)
+print(type(raw_filt))
+
+# Unpack data and set up variables
+x = raw_filt._data[0]                               # Relabel the data variable
+dt = 1/sample_rate                      # Define the sampling interval
+N = len(x)                        # Define the total number of data points
 T = N * dt                            # Define the total duration of the data
+time_axis = np.arange(0,T,dt)
 
+# Plot filtered time series data
+fig = plt.plot(time_axis, EEG)
+plt.xlabel('Time [Sec]')
+plt.ylabel('$\mu V$')
+plt.title("Filtered EEG data")
+plt.show()
+
+### DATA ANALYSIS
+
+# Compute Fourier transform and PSD
 xf = fft(x - x.mean())                # Compute Fourier transform of x
 Sxx = 2 * dt ** 2 / T * (xf * xf.conj())  # Compute spectrum
 Sxx = Sxx[:int(len(x) / 2)]           # Ignore negative frequencies
 
-df = 1 / T.max()                      # Determine frequency resolution
-fNQ = 1 / dt / 2                      # Determine Nyquist frequency
-faxis = np.arange(0,fNQ,df)              # Construct frequency axis
+# Compute and plot PSD with mne function
+raw_filt.plot_psd(fmax=100)
 
+# Setup variables for plotting
+df = 1 / T                      # Determine frequency resolution
+fNQ = 1 / dt / 2                      # Determine Nyquist frequency
+faxis = np.arange(0,fNQ-df,df)              # Construct frequency axis
+
+# Frequency band limits
 delta_lim = [0.1, 4]
 theta_lim = [4, 8]
 alpha_lim = [8, 12]
 beta_lim = [12, 30]
 
-# Filter out unwanted frequencies
-def high_pass(freq):
-    if freq >= delta_lim[0]:
-        return True
-    return False
-
-final_faxis = list(filter(high_pass, faxis))
-start = len(faxis) - len(final_faxis)
-xf = xf[start:]
-Sxx_real = Sxx.real[start:]
-
-
+# Compute power for each frquency band
 powers = [0,0,0,0]
 
-# Sum PSD for every frequency band
-for i in range(len(final_faxis)):
+for i in range(len(faxis)):
     freq = xf[i]
     if freq > delta_lim[0] and freq < delta_lim[1]:
         powers[0] += Sxx.real[i]
@@ -70,6 +93,7 @@ sum_powers = np.sum(powers)
 relative_powers = [powers[0]/sum_powers, powers[1]/sum_powers, powers[2]/sum_powers, powers[3]/sum_powers]
 
 
+### PLOTTING
 
 fig, axis = plt.subplots(2)
        
@@ -84,9 +108,9 @@ axis[0].set_xlabel(r"\textbf{Frequency band: Power (Relative power)}" +
                    "\nBeta: "  + str(np.round_(powers,3)[3]) + " (" + str(np.round_(relative_powers,3)[3]) + ")" 
                    , position=(0., 1e6), horizontalalignment='left')
 
-axis[1].semilogx(final_faxis, Sxx_real)
+axis[1].plot(faxis, Sxx.real)
+axis[1].set_xscale('log')
 axis[1].grid(True, which="both")
-axis[1].set_xlim([0, 100])
 axis[1].set_xlabel('Frequency [Hz]')
 axis[1].set_ylabel('Power [$\mu V^2$/Hz]')
 axis[1].set_title("Spectrum of EEG signal")
