@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import mne
+import scipy 
 from numpy.fft import fft
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -20,6 +21,8 @@ EEG = EEG - EEG_mean # Zero center data
 # Transforming data in a way that MNE can interpret and do filtering
 EEG = EEG.to_frame()
 data = EEG.to_numpy().T
+
+EEG.to_csv("EEGdata.csv")
 
 ch_names = EEG.columns.tolist()
 ch_types = ['eeg'] * len(ch_names)
@@ -60,24 +63,22 @@ fNQ = 1 / dt / 2                      # Determine Nyquist frequency
 faxis = np.arange(0,fNQ-df,df)              # Construct frequency axis
 
 # Frequency band limits
-delta_lim = [0.1, 4]
+delta_lim = [0.5, 4]
 theta_lim = [4, 8]
 alpha_lim = [8, 12]
 beta_lim = [12, 30]
 
 # Compute power for each frquency band
-powers = [0,0,0,0]
+def bandpower(x, fs, fmin, fmax):
+    f, Pxx = scipy.signal.periodogram(x, fs=fs)
+    ind_min = scipy.argmax(f > fmin) - 1
+    ind_max = scipy.argmax(f > fmax) - 1
+    return scipy.trapz(Pxx[ind_min: ind_max], f[ind_min: ind_max])
 
-for i in range(len(faxis)):
-    freq = xf[i]
-    if freq > delta_lim[0] and freq < delta_lim[1]:
-        powers[0] += Sxx.real[i]
-    if freq > theta_lim[0] and freq < delta_lim[1]:
-        powers[1] += Sxx.real[i]
-    if freq > alpha_lim[0] and freq < alpha_lim[1]:
-        powers[2] += Sxx.real[i]
-    if freq > beta_lim[0] and freq < beta_lim[1]:
-        powers[3] += Sxx.real[i]
+powers = [bandpower(data[0], sample_rate, delta_lim[0], delta_lim[1]),
+          bandpower(data[0], sample_rate, theta_lim[0], theta_lim[1]),
+          bandpower(data[0], sample_rate, alpha_lim[0], alpha_lim[1]),
+          bandpower(data[0], sample_rate, beta_lim[0], beta_lim[1])]
 
 print(powers)
 
@@ -104,10 +105,10 @@ axis[0].bar(xlabel, powers)
 axis[0].set_title("Power for frequency bands")
 axis[0].set_ylabel('Power [$\mu V^2$/Hz]')
 axis[0].set_xlabel(r"\textbf{Frequency band: Power (Relative power)}" + 
-                   "\nDelta: " + str(np.round_(powers,3)[0]) + " (" + str(np.round_(relative_powers,3)[0]) + ")" +
-                   "\nTheta: " + str(np.round_(powers,3)[1]) + " (" + str(np.round_(relative_powers,3)[1]) + ")" +
-                   "\nAlpha: " + str(np.round_(powers,3)[2]) + " (" + str(np.round_(relative_powers,3)[2]) + ")" +
-                   "\nBeta: "  + str(np.round_(powers,3)[3]) + " (" + str(np.round_(relative_powers,3)[3]) + ")" 
+                   "\nDelta: " + str(np.round_(powers,6)[0]) + " (" + str(np.round_(relative_powers,6)[0]) + ")" +
+                   "\nTheta: " + str(np.round_(powers,6)[1]) + " (" + str(np.round_(relative_powers,6)[1]) + ")" +
+                   "\nAlpha: " + str(np.round_(powers,6)[2]) + " (" + str(np.round_(relative_powers,6)[2]) + ")" +
+                   "\nBeta: "  + str(np.round_(powers,6)[3]) + " (" + str(np.round_(relative_powers,6)[3]) + ")" 
                    , position=(0., 1e6), horizontalalignment='left')
 
 axis[1].plot(faxis, Sxx.real)
