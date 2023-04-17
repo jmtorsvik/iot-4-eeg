@@ -54,9 +54,6 @@ xf = fft(x - x.mean())                # Compute Fourier transform of x
 Sxx = 2 * dt ** 2 / T * (xf * xf.conj())  # Compute spectrum
 Sxx = Sxx[:int(len(x) / 2)]           # Ignore negative frequencies
 
-# Compute and plot PSD with mne function
-#raw_filt.plot_psd(fmax=100)
-
 # Setup variables for plotting
 df = 1 / T                      # Determine frequency resolution
 fNQ = 1 / dt / 2                      # Determine Nyquist frequency
