@@ -13,7 +13,7 @@ rc('text', usetex=True)
 df = pd.read_csv("server/e_bolger")
 
 t = df["time"]
-sample_rate = 215 #Hz
+sample_rate = 200 #Hz
 EEG = (3.3/4096)*df["sensorValue"] # Deler 3.3v på 4096 og ganger med data for å få spenning
 EEG_mean = np.mean(EEG)
 EEG = EEG - EEG_mean # Zero center data
@@ -45,7 +45,7 @@ x = raw_filt._data[0]                               # Relabel the data variable
 dt = 1/sample_rate                      # Define the sampling interval
 N = len(x)                        # Define the total number of data points
 T = N * dt                            # Define the total duration of the data
-time_axis = np.arange(0,T,dt)
+time_axis = np.arange(0,T -dt,dt)
 
 ### DATA ANALYSIS
 
@@ -61,9 +61,9 @@ faxis = np.arange(0,fNQ-df,df)              # Construct frequency axis
 
 # Frequency band limits
 delta_lim = [0.5, 4]
-theta_lim = [4, 8]
-alpha_lim = [8, 12]
-beta_lim = [12, 30]
+theta_lim = [4, 7]
+alpha_lim = [7, 13]
+beta_lim = [13, 30]
 
 # Compute power for each frquency band
 def bandpower(x, fs, fmin, fmax):
@@ -100,8 +100,8 @@ y = 0.1*x + 0.0004
 fig2 = plt.figure()
 plt.plot(x, y)
 plt.plot(powers[1], powers[3], marker="o", markersize=20, markeredgecolor="red", markerfacecolor="green")
-plt.xlabel('Theta (4-8Hz) [$V^2$/Hz]')
-plt.ylabel('Beta (12-30Hz) [$V^2$/Hz]')
+plt.xlabel('Theta (4-7Hz) [$V^2$/Hz]')
+plt.ylabel('Beta (13-30Hz) [$V^2$/Hz]')
 plt.title("Beta vs Theta Power")
 
 plt.savefig("BetaVSTheta.pdf")
