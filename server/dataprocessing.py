@@ -13,10 +13,12 @@ rc('text', usetex=True)
 df = pd.read_csv("server/e_bolger")
 
 t = df["time"]
-sample_rate = 200 #Hz
-EEG = (3.3/4096)*df["sensorValue"] # Deler 3.3v på 4096 og ganger med data for å få spenning
+sample_rate = 250 #Hz
+
+# Divide datapoints by 3.3 and multiply with 4096 to arrive at Volts
+EEG = (3.3/4096)*df["sensorValue"]
 EEG_mean = np.mean(EEG)
-EEG = EEG - EEG_mean # Zero center data
+EEG = EEG - EEG_mean # Zero-mean center data
 
 # Transforming data in a way that MNE can interpret and do filtering
 EEG = EEG.to_frame()
@@ -45,7 +47,7 @@ x = raw_filt._data[0]                               # Relabel the data variable
 dt = 1/sample_rate                      # Define the sampling interval
 N = len(x)                        # Define the total number of data points
 T = N * dt                            # Define the total duration of the data
-time_axis = np.arange(0,T -dt,dt)
+time_axis = np.arange(0,T,dt)
 
 ### DATA ANALYSIS
 
