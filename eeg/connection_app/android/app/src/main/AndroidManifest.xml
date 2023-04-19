@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.connection_app">
-   <application
+    <!-- For Flutter Blue Plus to work (https://pub.dev/packages/flutter_blue): -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />  
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />  
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <application
         android:label="connection_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
@@ -30,9 +34,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- For Flutter Blue Plus to work (https://pub.dev/packages/flutter_blue): -->
-        <uses-permission android:name="android.permission.BLUETOOTH" />  
-        <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />  
-        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+        
     </application>
 </manifest>
