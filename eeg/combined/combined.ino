@@ -13,6 +13,8 @@
 #define BAUD_RATE 115200
 #define INPUT_PIN 34
 
+#define SAMPLE_RATE 250
+
 const char* ssid = "eduroam"; // Eduroam SSID
 const char* host = "arduino.php5.sk"; //external server domain for HTTP connection after authentification
 IPAddress server(10, 212, 173, 112);
@@ -99,7 +101,7 @@ void setup() {
 }
 
 // Sampling frequency
-const double f_s = 256; // Hz
+const double f_s = SAMPLE_RATE; // Hz
 // Cut-off frequency (-3 dB)
 const double f_c = 29.5; // Hz
 // Normalized cut-off frequency
@@ -129,39 +131,29 @@ void loop() {
 	// Calculate elapsed time
 	unsigned long present = micros();
 	unsigned long interval = present - PAST;
+  float intervalThreshold = 1000000/SAMPLE_RATE;
 	PAST = present;
 
 	// Run timer
-	//TIMER -= interval;
 
-  //float signal;
-  //float SENSOR_VALUE;
 	// Sample
+  String out = "";
   if(client.connect(server, 4000)) {
     Serial.print("\n *** Starting Communication *** \n");
-    client.println("\n *** Starting Communication *** \n");
+    client.println("sensorValue,time");
     while(client.connected()){
-      TIMER -= interval;
-      //Serial.print("kake: ");
-      //Serial.print(TIMER);
-      //Serial.print('\n');
-      if(TIMER < 0){
-        TIMER += 1000000 / SAMPLE_RATE;
-        //SENSOR_VALUE = ;
+      present = micros();
+      interval = present - PAST;
+      if(interval >=intervalThreshold){
+        PAST += intervalThreshold;
         SIGNAL = filter(analogRead(INPUT_PIN));
-        //Serial.print("eeg: ");
-        //Serial.println("jeg liker kake");
-        client.println(SIGNAL);
-        //Serial.println(SIGNAL);
+
+        out = String(SIGNAL) + "," + String(micros());
+        client.println(out);
+
       }
     }
   } else {
     Serial.print("\nConnection Failed\n");
   }
-}
-
-void sendToPC(float* data)
-{
-  byte* byteData = (byte*)(data);    // Casting to a byte pointer
-  //Serial.write(byteData, 4);         // Send through Serial to the PC
 }
