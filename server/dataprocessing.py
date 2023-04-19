@@ -13,7 +13,7 @@ rc('text', usetex=True)
 df = pd.read_csv("server/e_bolger")
 
 t = df["time"]
-sample_rate = 230 #Hz
+sample_rate = 215 #Hz
 EEG = (3.3/4096)*df["sensorValue"] # Deler 3.3v på 4096 og ganger med data for å få spenning
 EEG_mean = np.mean(EEG)
 EEG = EEG - EEG_mean # Zero center data
@@ -76,7 +76,6 @@ powers = [bandpower(data[0], sample_rate, delta_lim[0], delta_lim[1]),
           bandpower(data[0], sample_rate, theta_lim[0], theta_lim[1]),
           bandpower(data[0], sample_rate, alpha_lim[0], alpha_lim[1]),
           bandpower(data[0], sample_rate, beta_lim[0], beta_lim[1])]
-
 print(powers)
 
 # Compute relative power for each frequency band
@@ -87,12 +86,25 @@ relative_powers = [powers[0]/sum_powers, powers[1]/sum_powers, powers[2]/sum_pow
 ### PLOTTING
 
 # Plot filtered time series data
+fig1 = plt.figure()
 plt.plot(time_axis, EEG)
 plt.xlabel('Time [Sec]')
-plt.ylabel('$\mu V$')
+plt.ylabel('$Voltage$')
 plt.title("Filtered EEG timeseries data")
 
 plt.savefig("timeseries.pdf")
+
+# Plot filtered time series data
+x = np.linspace(0,0.001, 100)
+y = 0.1*x + 0.0004
+fig2 = plt.figure()
+plt.plot(x, y)
+plt.plot(powers[1], powers[3], marker="o", markersize=20, markeredgecolor="red", markerfacecolor="green")
+plt.xlabel('Theta (4-8Hz) [$V^2$/Hz]')
+plt.ylabel('Beta (12-30Hz) [$V^2$/Hz]')
+plt.title("Beta vs Theta Power")
+
+plt.savefig("BetaVSTheta.pdf")
 
 # Plot Power and Spectrum
 fig, axis = plt.subplots(2)
@@ -100,7 +112,7 @@ fig, axis = plt.subplots(2)
 xlabel = ["delta","theta","alpha","beta"]
 axis[0].bar(xlabel, powers)
 axis[0].set_title("Power for frequency bands")
-axis[0].set_ylabel('Power [$\mu V^2$/Hz]')
+axis[0].set_ylabel('Power [$V^2$/Hz]')
 axis[0].set_xlabel(r"\textbf{Frequency band: Power (Relative power)}" + 
                    "\nDelta: " + str(np.round_(powers,6)[0]) + " (" + str(np.round_(relative_powers,6)[0]) + ")" +
                    "\nTheta: " + str(np.round_(powers,6)[1]) + " (" + str(np.round_(relative_powers,6)[1]) + ")" +
@@ -112,7 +124,7 @@ axis[1].plot(faxis, Sxx.real)
 axis[1].set_xscale('log')
 axis[1].grid(True, which="both")
 axis[1].set_xlabel('Frequency [Hz]')
-axis[1].set_ylabel('Power [$\mu V^2$/Hz]')
+axis[1].set_ylabel('Power [$V^2$/Hz]')
 axis[1].set_title("Spectrum of EEG signal")
 
 fig.tight_layout()
